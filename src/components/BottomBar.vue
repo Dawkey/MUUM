@@ -25,11 +25,12 @@
         bottom: 0
         box-shadow: 0 -1px 1px -1px $color-spec
         font-size: 22px
+        background: $color-back
         i
-            margin-left: 10px
+            margin-left: 15px
             cursor: pointer
         .icon-pre
-            margin-left: 15px
+            margin-left: 20px
         .icon-play,.icon-pause
             font-size: 26px
 

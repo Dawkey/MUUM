@@ -24,7 +24,7 @@
             </div>
             <div class="lyric_contain">
                 <ul class="lyric">
-                    <li v-for="(item,index) in lyric" :key=index v-html="item.text"></li>
+                    <li v-for="(item,index) in lyric" :key="index" v-html="item.text"></li>
                 </ul>
             </div>
         </div>
@@ -32,9 +32,10 @@
 </template>
 
 <script>
+
     import {get_lyric} from "api/player.js";
     import {get_song} from "api/player.js";
-    import handle_lyric from "common/js/handle_lyric.js"
+    import handle_lyric from "common/js/handle_lyric.js";
 
     export default{
         name: "Player",
