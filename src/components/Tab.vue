@@ -1,7 +1,7 @@
 <template>
     <div class="tab">
         <router-link class="reco_song" to="/songs" tag="div">推荐<br/>歌单</router-link>
-        <router-link class="person_fm" to="/player" tag="div">私人<br/><span>FM</span></router-link>
+        <div class="person_fm">私人<br/><span>FM</span></div>
         <div class="person_song">我的<br/>歌单</div>
     </div>
 </template>
@@ -15,7 +15,7 @@
 <style lang="stylus" scoped>
     @import "~common/stylus/var.styl"
     .tab
-        // display: flex
+        display: flex
         display: none
         position: absolute
         top: 30px

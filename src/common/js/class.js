@@ -2,6 +2,7 @@ export class class_song{
     constructor(data) {
         this.id = data.id;
         this.name = data.name;
+        this.name_add = data.alia;
         this.singer = data.ar.map((val) => {
             return {id: val.id, name: val.name}
         });
@@ -11,6 +12,8 @@ export class class_song{
 
         let time = data.dt;
         this.time = {second: time, minute: time_minute(time)}
+
+        this.audio = {src: "", exp: -1}
     }
 }
 

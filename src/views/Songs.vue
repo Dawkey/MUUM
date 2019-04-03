@@ -33,11 +33,15 @@
                     <div class="singer_album">歌手<span>|</span>专辑</div>
                     <div class="time">时长</div>
                 </li>
-                <li v-for="(item,index) in songs" :key="index">
+                <li v-for="(item,index) in songs" :key="index"
+                    @click="song_select(index)"
+                    @dblclick="song_play(item)"
+                    :class="{select_li: index === select_index}"
+                >
                     <div class="index">{{index >= 9 ? index + 1 : "0" + (index+1)}}</div>
                     <div class="do">
-                        <i class="icon-love"></i>
-                        <i class="icon-download"></i>
+                        <i class="icon-love_min"></i>
+                        <i class="icon-download_min"></i>
                     </div>
                     <div class="song_name">{{item.name}}</div>
                     <div class="singer_album">
@@ -60,6 +64,7 @@
 
 
 <script>
+    import {mapMutations} from "vuex";
 
     import {get_songs} from "api/common.js";
 
@@ -78,7 +83,9 @@
                 descript: "",
                 
                 songs: [],
-                singer_album_flag: true
+                singer_album_flag: true,
+
+                select_index: -1
             }
         },
 
@@ -86,28 +93,52 @@
             this.songs_get();
         },
 
+        computed: {
+
+        },
+
         methods: {
+            ...mapMutations([
+                "set_full_flag",
+                "set_play_song",
+                "set_play_list"
+            ]),
+
             songs_get(){
 
                 get_songs("445553614").then((res)=>{
 
                     let data = res.data;
-                    
-                    let playlist = data.playlist;
-                    this.page_url = playlist.coverImgUrl;
-                    this.name = playlist.name;
+                    let code = data.code;
+                    if(code === 200){
+                        let playlist = data.playlist;
+                        // console.log(playlist);
+                        this.page_url = playlist.coverImgUrl;
+                        this.name = playlist.name;
 
-                    this.head_img_url = playlist.creator.avatarUrl;
-                    this.creator_name = playlist.creator.nickname;
-                    let date = new Date(playlist.createTime);
-                    this.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-                    this.tag = playlist.tags;
-                    this.descript = playlist.description;
+                        this.head_img_url = playlist.creator.avatarUrl;
+                        this.creator_name = playlist.creator.nickname;
+                        let date = new Date(playlist.createTime);
+                        this.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                        this.tag = playlist.tags;
+                        this.descript = playlist.description;
 
-                    this.songs = playlist.tracks.map((val) => new class_song(val));
+                        this.songs = playlist.tracks.map((val) => new class_song(val));
+                    }
+
                 });
 
-            }
+            },
+
+            song_select(index){
+                this.select_index = index;
+            },
+
+            song_play(song){
+                this.set_full_flag(true);
+                this.set_play_song(song);
+                // this.set_play_list(this.songs);
+            },
         }
     }
 </script>
@@ -186,9 +217,9 @@
         
         .song_part
             font-size: 14px
-            margin-top: 25px
+            margin-top: 20px
             margin-left: 8px
-            margin-bottom: 24px
+            margin-bottom: 27px
             .button
                 display: flex
                 margin-left: 21px
@@ -198,7 +229,7 @@
                     align-items: center
                     padding: 0 15px
                     margin-right: 25px
-                    margin-bottom: 15px
+                    margin-bottom: 12px
                     //#e3c4a8
                     background: rgba(227,196,168,0.5)
                     border-radius: 4px
@@ -217,16 +248,19 @@
                     background: rgba(150,150,150,0.2)
                 >li
                     display: flex
-                    line-height: 24px
+                    line-height: 27px
                     &.nav_li
                         background: rgba(150,150,150,0.01)
                         .time
                             font-size: inherit
+                    &.select_li
+                        background: rgba(150,150,150,0.2)
                     >div
                         box-sizing: border-box
                         white-space: nowrap
                         text-overflow: ellipsis
                         overflow: hidden
+                        cursor: default
                     .index
                         font-size: 13px
                         width: 37px
@@ -239,11 +273,10 @@
                         padding-left: 10px
                         >i
                             cursor: pointer
-                        .icon-love
-                            font-size: 13px
-                            margin-left: 2px
-                            margin-right: 7px
-                        .icon-download
+                        .icon-love_min
+                            font-size: 14px
+                            margin-right: 8px
+                        .icon-download_min
                             margin-top: -1px   
                     .song_name
                         padding-left: 20px

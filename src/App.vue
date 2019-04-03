@@ -7,18 +7,18 @@
                 <router-view/>
             </keep-alive>
         </div>
-        <bottom-bar></bottom-bar>
+        <player></player>
     </div>
 </template>
 
 <script>
     import TopBar from "components/TopBar.vue";
-    import BottomBar from "components/BottomBar.vue";
     import Tab from "components/Tab.vue";
+    import Player from "components/Player.vue";
 
     export default{
         name: "App",
-        components: {TopBar,BottomBar,Tab}
+        components: {TopBar,Tab,Player}
     }
 
 </script>
@@ -28,7 +28,7 @@
 
     .router
         margin-top: 30px
-        height: calc(100% - 70px)
+        height: calc(100% - 75px)
         background-color: $color-back
         overflow-x: hidden
         overflow-y: auto

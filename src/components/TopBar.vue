@@ -1,6 +1,8 @@
 <template>
     <div class="top_bar">
-        <i class="icon-muum"></i>
+        <div class="left-icon">
+            <i class="icon-route_back"></i>
+        </div>
         <div class="right-icon">
             <i class="icon-min"></i>
             <i class="icon-close"></i>
@@ -32,9 +34,12 @@
         width: 100%
         height: 30px
         font-size: 22px
-        .icon-muum
-            display: none
-            position:absolute
+        .left-icon
+            position: absolute
+            left: 8px
+            font-size: 14px
+            >i
+                cursor: pointer
         .right-icon
             position: absolute
             right: 0

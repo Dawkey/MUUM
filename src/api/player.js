@@ -8,3 +8,7 @@ export function get_lyric(id){
 export function get_song(id){
     return axios.get(`/api/song/detail?ids=${id}`);
 }
+
+export function get_audio(id){
+    return axios.get(`/api/song/url?id=${id}`);
+}
