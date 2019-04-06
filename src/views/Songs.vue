@@ -106,7 +106,7 @@
 
             songs_get(){
 
-                get_songs("445553614").then((res)=>{
+                get_songs("2239472530").then((res)=>{
 
                     let data = res.data;
                     let code = data.code;
@@ -137,7 +137,7 @@
             song_play(song){
                 this.set_full_flag(true);
                 this.set_play_song(song);
-                // this.set_play_list(this.songs);
+                this.set_play_list(this.songs);
             },
         }
     }

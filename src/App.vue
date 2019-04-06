@@ -39,6 +39,6 @@
         display: none
     ::-webkit-scrollbar-thumb
         border-radius: 8px
-        background-color: rgba(103,170,209,0.3)
+        background-color: $color-spec-o
 
 </style>

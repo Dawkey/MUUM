@@ -3,7 +3,11 @@
 
         <audio class="audio" :src="play_song === null ? '' : play_song.audio.src"
                ref="audio"
-               @canplay="start_play"
+               @canplay="can_play"
+               @timeupdate="time_update"
+               @waiting="loading"
+               @playing="loaded"
+               @progress="buffer_update"
         >
         </audio>
 
@@ -36,11 +40,14 @@
                              </span>
                     </div>
                 </div>
-                <div class="lyric_contain">
-                    <ul class="lyric">
-                        <li v-for="(item,index) in lyric" :key="index" v-html="item.text"></li>
-                    </ul>
-                </div>
+
+                <lyric class="lyric" 
+                    :lyric="lyric" :lyric_flag="lyric_flag" 
+                    :audio="$refs.audio" :bar_is_move="bar_is_move"
+                    :play_flag="play_flag" :audio_ready="audio_ready"
+                >
+                </lyric>
+
             </div>            
         </div>
 
@@ -50,16 +57,30 @@
                 <img v-show="!full_flag" @click="set_full_flag(true)" :src="album_pic">
                 <i   v-show="full_flag"  @click="set_full_flag(false)" class="icon-muum"></i>
             </div>
-            <i class="icon-pre"></i>
+            <i class="icon-pre" @click="pre_song"></i>
             <i :class="[{'icon-play': !play_flag},{'icon-pause': play_flag}]"
                 @click="toggle_play"
             >
             </i>
-            <i class="icon-next"></i>
-            <progress-bar class="progress_bar"></progress-bar>
+            <i class="icon-next" @click="next_song"></i>
+
+            <progress-bar class="progress_bar"
+                :current_time="current_time" :total_time="total_time" :audio_ready="audio_ready"
+                :buffer_precent="buffer_precent" :loading_flag="loading_flag"
+                @change_time = "change_time"
+            >
+            </progress-bar>
+
             <div class="sound">
                 <i class="icon-sound"></i>
-                <div class="sound_bar"></div>
+                <div class="sound_bar">
+                    <div class="volume_bar"></div>
+                    <div class="pan">
+                        <svg>
+                            <circle cx="50%" cy="50%" r="2"/>
+                        </svg>
+                    </div>                    
+                </div>
             </div>
             <div class="songlist">
                 <i class="icon-songlist"></i>
@@ -78,11 +99,12 @@
     import {class_song} from "common/js/class.js";
 
     import ProgressBar from "components/base/ProgressBar.vue";
+    import Lyric from "components/base/Lyric.vue";
 
     export default{
         name: "Player",
 
-        components: {ProgressBar},
+        components: {ProgressBar,Lyric},
 
         data(){
             return{
@@ -91,9 +113,16 @@
                 name_add: "",
                 singer: [],
                 album: "",
-                album_pic: "",
+                album_pic: require("assets/album.svg"),
 
-                audio_ready: false
+                audio_ready: false, //控制audio能否播放的关键flag。
+                current_time: 0,
+                total_time: 0,
+
+                buffer_precent: 0,
+                loading_flag: false,
+                lyric_flag: false,
+                bar_is_move: false
             }
         },
 
@@ -102,28 +131,26 @@
             ...mapGetters([
                 "play_flag",
                 "full_flag",
-                "play_song"
+                "play_song",
+                "play_list"
             ]),
         },
 
 
         created(){
-            if(this.play_song === null){
-                this.song_get();
-            }
-            // this.data_set();
         },
 
 
         mounted(){
-            // this.song_get();
+            this.$refs.audio.volume = 0.1;
         },
 
 
         methods:{
             ...mapMutations([
                 "set_play_flag",
-                "set_full_flag"
+                "set_full_flag",
+                "set_play_song"
             ]),
 
             ...mapActions([
@@ -137,7 +164,7 @@
                     let tra_lyric = data.tlyric.lyric;
                     let ori_arr = [];
                     let tra_arr = [];
-
+                    
                     if(ori_lyric){
                         ori_arr = handle_lyric(ori_lyric);
                     }
@@ -159,14 +186,8 @@
             song_get(){
                 get_song("1337938362").then((res)=>{
                     let data = res.data.songs[0];
-                    // console.log(data);
                     let song = new class_song(data);
-                    this.lyric_get(song.id);
-                    this.name = song.name;
-                    this.name_add = song.name_add.length === 0 ? "" : song.name_add[0];
-                    this.singer = song.singer;
-                    this.album = song.album.name;
-                    this.album_pic = song.album.pic_url;
+                    this.set_play_song(song);
                 });
             },
 
@@ -182,39 +203,92 @@
                 this.singer = song.singer;
                 this.album = song.album.name;
                 this.album_pic = song.album.pic_url;
+
+                this.total_time = song.time.second;
             },
 
-            start_play(){
-                this.$refs.audio.volume = 0.1;
-                this.audio_ready = true;
-                // this.$refs.audio.play();
+
+            pre_song(){
+
+            },
+
+            next_song(){
+
             },
 
             toggle_play(){
+                if(!this.play_list.length){
+                    return;
+                }
                 this.set_play_flag(!this.play_flag);
-            }
+            },
+
+            loading(){
+                this.loading_flag = true;
+                this.lyric_flag = false;
+            },
+
+            loaded(){
+                this.loading_flag = false;
+                this.lyric_flag = true;
+            },
+
+            can_play(){
+                this.audio_ready = true;
+            },
+            
+            time_update(){
+                this.current_time = this.$refs.audio.currentTime;
+            },
+
+            buffer_update(){
+                let buffered = this.$refs.audio.buffered;
+                let length = buffered.length;
+                let time = buffered.end(length - 1);
+                this.buffer_precent = time / this.$refs.audio.duration;
+            },
+
+            change_time(time){
+                this.$refs.audio.currentTime = time;
+                this.bar_is_move = !this.bar_is_move;
+            },
+            
+
         },
 
 
         watch: {
             play_song(){
+                this.buffer_precent = 0;
                 this.audio_ready = false;
+                this.loading_flag = true;
+                this.lyric_flag = false;    
+                this.lyric = [];
                 this.data_set();
                 this.set_play_flag(true);
             },
 
             audio_ready(){
-                if(this.audio_ready && this.play_flag){
+                if(!this.audio_ready){
+                    return;
+                }
+
+                if(this.play_flag){
                     this.$refs.audio.play();
                 }
             },
 
             play_flag(){
+                if(this.play_flag === false){
+                    this.loading_flag = false;
+                    this.lyric_flag = false;
+                }
                 if(this.audio_ready){
                     let audio = this.$refs.audio;
                     this.play_flag ? audio.play() : audio.pause();
                 }
-            }
+            },
+
         }
         
     }
@@ -254,7 +328,7 @@
                         width: 220px
                         height: 220px
                         border-radius: 50%
-                        border: solid rgba(50,50,50,0.15) 5px
+                        // border: solid rgba(50,50,50,0.15) 5px
                         box-shadow: 0 0 3px 0 #777
                         object-fit: cover
                     .album_hole
@@ -329,6 +403,7 @@
                     justify-content: space-between
                     font-size: 13px
                     margin-top: 10px
+                    margin-right: 6px
                     >div
                         display: flex
                         >span
@@ -340,20 +415,13 @@
                             color: $color-spec
                             cursor: pointer
 
-                .lyric_contain
+                .lyric
                     position: relative
                     flex-grow: 1
                     overflow: auto
                     padding-right: 4px
                     margin-top: 20px
                     margin-bottom: 35px
-                    .lyric
-                        font-size: 14px
-                        color: $color-text-2
-                        line-height: 18px
-                        >li
-                            min-height: 13px
-                            margin-top: 13px
                 ::-webkit-scrollbar
                     width: 6px
                     background-color: transparent
@@ -361,7 +429,7 @@
                     display: none
                 ::-webkit-scrollbar-thumb
                     border-radius: 10px
-                    background-color: rgba(103,170,209,0.3)
+                    background-color: $color-spec-o
             
 
         
@@ -378,17 +446,17 @@
             font-size: 23px
             background: $color-back
             .mini_page
-                width: 45px
+                width: 42px
                 height: 42px
                 margin-left: 2px
                 display: flex
                 align-items: center
                 >img
-                    width: 45px
+                    width: 42px
                     height: 100%
                     object-fit: cover
                     border-radius: 2px
-                    box-shadow: 0 0 1px 0 #666
+                    // box-shadow: 0 0 1px 0 #666
                     cursor: pointer
                 >i
                     font-size: 26px
@@ -413,10 +481,35 @@
                     font-size: 15px
                     margin-right: 6px
                 .sound_bar
+                    position: relative
+                    display: flex
+                    align-items: center
                     height: 5px
                     width: 50px
                     border-radius: 4px
-                    background: rgba(103,170,209,0.3)
+                    background: $color-spec-o
+                    .volume_bar
+                        position: absolute
+                        left: 0
+                        height: 100%
+                        width: 30%
+                        border-radius: 4px
+                        background: $color-spec
+                    .pan
+                        display: none
+                        position: absolute
+                        left: 30%
+                        transform: translateX(-50%)
+                        width: 11px
+                        height: 11px
+                        border-radius: 43%
+                        background: $color-text
+                        >svg
+                            position: absolute
+                            width: 11px
+                            height: 11px
+                            circle
+                                fill: $color-spec                    
             .songlist
                 >i
                     font-size: 24px

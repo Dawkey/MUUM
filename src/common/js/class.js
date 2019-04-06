@@ -11,7 +11,7 @@ export class class_song{
         this.album = {id: al.id, name: al.name, pic_url: al.picUrl};
 
         let time = data.dt;
-        this.time = {second: time, minute: time_minute(time)}
+        this.time = {second: Math.floor(time / 1000), minute: time_minute(time)}
 
         this.audio = {src: "", exp: -1}
     }
