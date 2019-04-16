@@ -30,15 +30,24 @@
                     <div class="index"></div>
                     <div class="do">操作</div>
                     <div class="song_name">歌名</div>
-                    <div class="singer_album">歌手<span>|</span>专辑</div>
+                    <div class="singer_album">
+                        <span @click="show_singer" :class="{active_span: singer_album_flag}">歌手</span>
+                        |
+                        <span @click="show_album" :class="{active_span: !singer_album_flag}">专辑</span>
+                    </div>
                     <div class="time">时长</div>
                 </li>
                 <li v-for="(item,index) in songs" :key="index"
                     @click="song_select(index)"
-                    @dblclick="song_play(item)"
+                    @dblclick="song_play(item,index)"
                     :class="{select_li: index === select_index}"
                 >
-                    <div class="index">{{index >= 9 ? index + 1 : "0" + (index+1)}}</div>
+                    <div class="index" :class="{play_index: play_index === index}">
+                        <span v-show="index !== play_index">
+                            {{index >= 9 ? index + 1 : "0" + (index+1)}}
+                        </span>
+                        <i class="icon-sound" v-show="index === play_index"></i>
+                    </div>
                     <div class="do">
                         <i class="icon-love_min"></i>
                         <i class="icon-download_min"></i>
@@ -64,7 +73,7 @@
 
 
 <script>
-    import {mapMutations} from "vuex";
+    import {mapGetters,mapMutations} from "vuex";
 
     import {get_songs} from "api/common.js";
 
@@ -94,19 +103,22 @@
         },
 
         computed: {
-
+            ...mapGetters([
+                "play_index"
+            ])
         },
 
         methods: {
             ...mapMutations([
                 "set_full_flag",
                 "set_play_song",
+                "set_play_index",
                 "set_play_list"
             ]),
 
             songs_get(){
 
-                get_songs("2239472530").then((res)=>{
+                get_songs("2749118640").then((res)=>{
 
                     let data = res.data;
                     let code = data.code;
@@ -134,11 +146,20 @@
                 this.select_index = index;
             },
 
-            song_play(song){
+            song_play(song,index){
                 this.set_full_flag(true);
+                this.set_play_index(index);
                 this.set_play_song(song);
                 this.set_play_list(this.songs);
             },
+
+            show_singer(){
+                this.singer_album_flag = true;
+            },
+
+            show_album(){
+                this.singer_album_flag = false;
+            }
         }
     }
 </script>
@@ -171,8 +192,8 @@
                         font-size: 15px
                         line-height: 22px
                         padding: 0 5px
-                        box-shadow: 0 0 2px 0
-                        margin-right: 2px
+                        background: $color-button
+                        margin-right: 8px
                 .creator
                     display: flex
                     align-items: center
@@ -189,8 +210,9 @@
                         color: $color-spec
                         cursor: pointer
                     .date
-                        font-size: 14px
+                        font-size: 13px
                         margin-left: 5px
+                        color: $color-text-2
                         
                 .tag
                     margin-top: 14px
@@ -230,31 +252,36 @@
                     padding: 0 15px
                     margin-right: 25px
                     margin-bottom: 12px
-                    //#e3c4a8
-                    background: rgba(227,196,168,0.5)
+                    background: $color-button
                     border-radius: 4px
                     cursor: pointer
-                    box-shadow: 0 0 1px 0 #e3c4a8
+                    color: $color-text
                     >i
                         margin-right: 3px
                     .icon-mark
-                        font-size: 15px    
+                        font-size: 15px
+                    &:hover    
+                        background: $color-button-a
+                        color: $color-spec
             .songlist
-                >li:nth-of-type(2n-1)
-                    background: rgba(150,150,150,0.01)
-                >li:nth-of-type(2n)
-                    background: rgba(150,150,150,0.07)
                 >li:hover
-                    background: rgba(150,150,150,0.2)
+                    background: $color-li-h
+                    .index,.song_name,.singer_album,.time
+                        color: $color-text
                 >li
                     display: flex
                     line-height: 27px
+                    color: $color-text
                     &.nav_li
-                        background: rgba(150,150,150,0.01)
+                        background: transparent
                         .time
                             font-size: inherit
+                        .index,.song_name,.singer_album,.time
+                            color: $color-text-2
                     &.select_li
-                        background: rgba(150,150,150,0.2)
+                        background: $color-li-a
+                        .index,.song_name,.singer_album,.time
+                            color: $color-spec
                     >div
                         box-sizing: border-box
                         white-space: nowrap
@@ -262,22 +289,34 @@
                         overflow: hidden
                         cursor: default
                     .index
+                        position: relative
                         font-size: 13px
                         width: 37px
                         text-align: right
                         margin-right: 10px
+                        color: $color-text-2
+                        .icon-sound
+                            position: absolute
+                            top: 6px
+                            right: 1px
+                            font-size: 13.5px
+                            color: $color-spec
                     .do
                         display: flex
                         align-items: center
                         width: 55px
                         padding-left: 10px
+                        color: $color-text-2
                         >i
                             cursor: pointer
+                            &:hover
+                                color: $color-spec
                         .icon-love_min
                             font-size: 14px
                             margin-right: 8px
                         .icon-download_min
-                            margin-top: -1px   
+                            margin-top: -1px
+                            
                     .song_name
                         padding-left: 20px
                         padding-right: 145px
@@ -285,9 +324,16 @@
                     .singer_album
                         width: 27%
                         padding-right: 20px
+                        span
+                            cursor: pointer
+                            &:hover
+                                color: $color-text
+                        .active_span
+                            color: $color-text
                     .time
                         font-size: 13px
                         width: 65px
+                        color: $color-text-2
 
 
 

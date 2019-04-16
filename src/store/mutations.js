@@ -1,6 +1,7 @@
 // play_flag
 // full_flag
 // play_song
+// play_index
 // play_list
 
 const mutations = {
@@ -15,6 +16,10 @@ const mutations = {
 
     set_play_song(state,play_song){
         state.play_song = play_song;
+    },
+
+    set_play_index(state,play_index){
+        state.play_index = play_index;
     },
 
     //设置当前播放的歌曲的 url 地址。

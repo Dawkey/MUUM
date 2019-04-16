@@ -145,8 +145,9 @@
                 clearTimeout(this.scroll_timer);
                 this.is_scroll = true;
                 this.scroll_timer = setTimeout(()=>{
+                    this.lyric_move();
                     this.is_scroll = false;
-                },1000);
+                },1500);
             }
         }
         

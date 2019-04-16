@@ -21,6 +21,14 @@ module.exports = {
                 pathRewrite: {
                     "^/api": ""
                 }
+            },
+            "/audiourl": {
+                target: "http://m10.music.126.net",
+                changeOrigin: true,
+                ws: true,
+                pathRewrite: {
+                    "^/audiourl": ""
+                }
             }
         }
     }

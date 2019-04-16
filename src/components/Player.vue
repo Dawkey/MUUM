@@ -8,6 +8,7 @@
                @waiting="loading"
                @playing="loaded"
                @progress="buffer_update"
+               @ended="ended"
         >
         </audio>
 
@@ -16,6 +17,10 @@
                 <div class="circle">
                     <img class="album_circle" :src="album_pic">
                     <div class="album_hole"></div>
+                    <music-move class="music_move"
+                        :analyser="analyser" :analyser_flag="analyser_flag"
+                    >
+                    </music-move>
                 </div>
                 <div class="button">
                     <div class="button_1">
@@ -67,20 +72,15 @@
             <progress-bar class="progress_bar"
                 :current_time="current_time" :total_time="total_time" :audio_ready="audio_ready"
                 :buffer_precent="buffer_precent" :loading_flag="loading_flag"
-                @change_time = "change_time"
-            >
+                @change_time = "change_time">
             </progress-bar>
 
             <div class="sound">
                 <i class="icon-sound"></i>
-                <div class="sound_bar">
-                    <div class="volume_bar"></div>
-                    <div class="pan">
-                        <svg>
-                            <circle cx="50%" cy="50%" r="2"/>
-                        </svg>
-                    </div>                    
-                </div>
+                <sound-bar class="sound_bar"
+                    :init_volume="init_volume"
+                    @change_volume = "change_volume">
+                </sound-bar>
             </div>
             <div class="songlist">
                 <i class="icon-songlist"></i>
@@ -99,12 +99,16 @@
     import {class_song} from "common/js/class.js";
 
     import ProgressBar from "components/base/ProgressBar.vue";
+    import SoundBar from "components/base/SoundBar.vue";
     import Lyric from "components/base/Lyric.vue";
+    import MusicMove from "components/base/MusicMove.vue";
+
+import { setInterval } from 'timers';
 
     export default{
         name: "Player",
 
-        components: {ProgressBar,Lyric},
+        components: {ProgressBar,SoundBar,Lyric,MusicMove},
 
         data(){
             return{
@@ -122,7 +126,12 @@
                 buffer_precent: 0,
                 loading_flag: false,
                 lyric_flag: false,
-                bar_is_move: false
+                bar_is_move: false,
+
+                init_volume: 0.25,
+
+                analyser: null,
+                analyser_flag: true
             }
         },
 
@@ -132,6 +141,7 @@
                 "play_flag",
                 "full_flag",
                 "play_song",
+                "play_index",
                 "play_list"
             ]),
         },
@@ -142,7 +152,7 @@
 
 
         mounted(){
-            this.$refs.audio.volume = 0.1;
+            this.$refs.audio.volume = this.init_volume * 0.35;
         },
 
 
@@ -150,7 +160,8 @@
             ...mapMutations([
                 "set_play_flag",
                 "set_full_flag",
-                "set_play_song"
+                "set_play_song",
+                "set_play_index"
             ]),
 
             ...mapActions([
@@ -209,17 +220,23 @@
 
 
             pre_song(){
-
+                if(!this.play_list.length) return;
+                let index = this.play_index - 1;
+                if(index < 0) index = this.play_list.length - 1;
+                this.set_play_index(index);
+                this.set_play_song(this.play_list[index]);
             },
 
             next_song(){
-
+                if(!this.play_list.length) return;
+                let index = this.play_index + 1;
+                if(index > this.play_list.length - 1) index = 0;
+                this.set_play_index(index);
+                this.set_play_song(this.play_list[index]);
             },
 
             toggle_play(){
-                if(!this.play_list.length){
-                    return;
-                }
+                if(!this.play_list.length) return;
                 this.set_play_flag(!this.play_flag);
             },
 
@@ -237,6 +254,10 @@
                 this.audio_ready = true;
             },
             
+            ended(){
+                this.next_song();
+            },
+
             time_update(){
                 this.current_time = this.$refs.audio.currentTime;
             },
@@ -244,8 +265,10 @@
             buffer_update(){
                 let buffered = this.$refs.audio.buffered;
                 let length = buffered.length;
-                let time = buffered.end(length - 1);
-                this.buffer_precent = time / this.$refs.audio.duration;
+                if(length > 0){
+                    let time = buffered.end(length - 1);
+                    this.buffer_precent = time / this.$refs.audio.duration;
+                }
             },
 
             change_time(time){
@@ -253,6 +276,18 @@
                 this.bar_is_move = !this.bar_is_move;
             },
             
+            change_volume(volume){
+                this.$refs.audio.volume = volume * 0.35;
+            },
+
+            init_analyser(){
+                let ctx = new (window.AudioContext || window.webkitAudioContext)();
+                let analyser = ctx.createAnalyser();
+                let audio_src = ctx.createMediaElementSource(this.$refs.audio);
+                audio_src.connect(analyser);
+                analyser.connect(ctx.destination);
+                this.analyser = analyser;
+            }
 
         },
 
@@ -266,6 +301,11 @@
                 this.lyric = [];
                 this.data_set();
                 this.set_play_flag(true);
+
+                if(this.analyser_flag){
+                    this.init_analyser();
+                    this.analyser_flag = false;
+                }
             },
 
             audio_ready(){
@@ -296,6 +336,13 @@
 
 <style scoped lang="stylus">
     @import "~common/stylus/var.styl"
+
+    @keyframes rotate
+        0%
+            transform: rotate(0)
+        100%
+            transform: rotate(360deg)
+
     .player
         position: fixed
         .main
@@ -322,18 +369,19 @@
                     width: 280px
                     height: 280px
                     border-radius: 50%
-                    // box-shadow: 0 0 5px 0 #666
                     .album_circle
                         position: relative
-                        width: 220px
-                        height: 220px
+                        z-index: 10
+                        width: 200px
+                        height: 200px
                         border-radius: 50%
-                        // border: solid rgba(50,50,50,0.15) 5px
-                        box-shadow: 0 0 3px 0 #777
                         object-fit: cover
+                        filter: grayscale(85%)
+                        animation: rotate 35s linear infinite
                     .album_hole
                         display: none
                         position: absolute
+                        z-index: 11
                         width: 40px
                         height: 40px
                         border-radius: 50%
@@ -349,6 +397,9 @@
                             border: solid rgba(50,50,50,0.15) 10px
                             border-radius: 50%
                             box-shadow: 0 0 0 1px rgba(50,50,50,0.3) inset
+                    .music_move
+                        position: absolute
+                        z-index: 11
                 .button
                     margin-top: 22px
                     width: 175px
@@ -362,8 +413,8 @@
                             align-items: center
                             height: 30px
                             padding: 0 10px
-                            border-radius: 2px
-                            box-shadow: 0 0 3px 0 #777
+                            border-radius: 4px
+                            background: $color-button
                             cursor: pointer
                             i
                                 font-size: 17px
@@ -371,6 +422,9 @@
                                 margin-bottom: 1px
                             .icon-unlove
                                 font-size: 18px
+                            &:hover
+                                background: $color-button-a
+                                color: $color-spec
                     .button_2
                         margin-top: 12px
 
@@ -446,26 +500,29 @@
             font-size: 23px
             background: $color-back
             .mini_page
-                width: 42px
-                height: 42px
-                margin-left: 2px
+                width: 44px
+                height: 43px
+                margin-left: 1px
                 display: flex
                 align-items: center
                 >img
-                    width: 42px
+                    width: 44px
                     height: 100%
                     object-fit: cover
+                    filter: grayscale(85%)
                     border-radius: 2px
-                    // box-shadow: 0 0 1px 0 #666
                     cursor: pointer
                 >i
                     font-size: 26px
                     margin-left: 20px
-                    // color: #e3c4a8
                     cursor: pointer
             >i
                 margin-left: 15px
                 cursor: pointer
+            i
+                color: $color-icon
+                &:hover
+                    color: $color-icon-h 
             .icon-pre
                 margin-left: 15px
             .icon-play,.icon-pause
@@ -479,41 +536,12 @@
                 margin-left: 10px
                 >i
                     font-size: 15px
-                    margin-right: 6px
-                .sound_bar
-                    position: relative
-                    display: flex
-                    align-items: center
-                    height: 5px
-                    width: 50px
-                    border-radius: 4px
-                    background: $color-spec-o
-                    .volume_bar
-                        position: absolute
-                        left: 0
-                        height: 100%
-                        width: 30%
-                        border-radius: 4px
-                        background: $color-spec
-                    .pan
-                        display: none
-                        position: absolute
-                        left: 30%
-                        transform: translateX(-50%)
-                        width: 11px
-                        height: 11px
-                        border-radius: 43%
-                        background: $color-text
-                        >svg
-                            position: absolute
-                            width: 11px
-                            height: 11px
-                            circle
-                                fill: $color-spec                    
+                    margin-right: 6px            
             .songlist
                 >i
                     font-size: 24px
                     margin-left: 13px
                     margin-right: 16px
+                    cursor: pointer
 
 </style>
