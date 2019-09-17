@@ -59,7 +59,7 @@
 
         <div class="bottom_bar">
             <div class="mini_page">
-                <img v-show="!full_flag" @click="set_full_flag(true)" :src="album_pic">
+                <!-- <img v-show="!full_flag" @click="set_full_flag(true)" :src="album_pic"> -->
                 <i   v-show="full_flag"  @click="set_full_flag(false)" class="icon-muum"></i>
             </div>
             <i class="icon-pre" @click="pre_song"></i>

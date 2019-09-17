@@ -23,7 +23,7 @@ module.exports = {
                 }
             },
             "/audiourl": {
-                target: "http://m10.music.126.net",
+                target: "http://m7.music.126.net/",
                 changeOrigin: true,
                 ws: true,
                 pathRewrite: {

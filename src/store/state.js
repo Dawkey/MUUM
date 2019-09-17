@@ -6,7 +6,7 @@
 
 const state = {
     play_flag: false,
-    full_flag: true,
+    full_flag: false,
     play_song: null,
     play_index: -1,
     play_list: []
