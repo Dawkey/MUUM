@@ -3,7 +3,6 @@ import Router from 'vue-router';
 
 import Songs from "views/Songs.vue";
 import Login from "views/Login.vue";
-import Home from "views/Home.vue";
 
 Vue.use(Router);
 

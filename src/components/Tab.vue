@@ -1,8 +1,8 @@
 <template>
-    <div class="tab">
-        <router-link class="reco_song" to="/songs" tag="div">推荐<br/>歌单</router-link>
-        <div class="person_fm">私人<br/><span>FM</span></div>
-        <div class="person_song">我的<br/>歌单</div>
+    <div class="tab">        
+        <router-link class="reco_song" to="/songs" tag="div">推荐歌单</router-link>
+        <div class="person_fm">私人<span>FM</span></div>
+        <div class="person_song">我的歌单</div>
     </div>
 </template>
 
@@ -14,30 +14,51 @@
 
 <style lang="stylus" scoped>
     @import "~common/stylus/var.styl"
-    .tab
-        display: flex
-        display: none
+    .tab        
         position: absolute
-        top: 30px
-        left: 50%
-        transform: translateX(-50%)
+        top: 50%
+        left: -84px  
+        transform: translateY(-75%)
         font-size: 16px
         font-family: "方正苏新诗柳楷简体"
-        padding-left: 10px
         z-index: 10
-        margin-top: 14px
+        padding: 4px 0
+        padding-right: 2px     
+        // opacity: 0.4   
+        &:before,&:after
+            left: 84px
+        &:before
+            content: ""
+            position: absolute
+            z-index: 11
+            top: 0            
+            width: 5px
+            height: 100%
+            background: $color-back
+        &:after
+            content: ""
+            position: absolute
+            z-index: 12
+            top: 0            
+            width: 5px
+            height: 100%
+            background: $color-spec-o
         >div
+            position: relative
+            z-index: 10
             padding: 4px
-            margin-right: 10px
+            padding-left: 9px
             letter-spacing: 3px
             line-height: 20px
             border-radius: 2px
-            box-shadow: 0 0 3px 0 #777            
+            box-shadow: 0 0 1px 1px $color-spec-o
             cursor: pointer
-            border-top: 8px solid
+            border-right: 4px solid
             background: $color-back
+            margin-bottom: 12px            
         .reco_song
             color: #ee4266
+            // transform: translateX(84px)
         .person_fm
             color: #5893d4
             >span
@@ -45,6 +66,7 @@
                 letter-spacing: 7px
         .person_song
             color: #5dc0a6
+            margin-bottom: 0
                 
 </style>
 
