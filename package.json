@@ -23,7 +23,7 @@
     "@vue/cli-service": "^3.5.0",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.2",
-    "electron": "4.0.0",
+    "electron": "9.4.0",
     "vue-cli-plugin-electron-builder": "^1.2.0",
     "vue-template-compiler": "^2.5.21"
   }
